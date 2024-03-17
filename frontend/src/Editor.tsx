@@ -1,6 +1,6 @@
 import { useReactiveVar } from "@apollo/client";
 import { Player } from "@lottiefiles/react-lottie-player";
-import { ColorPicker, GetProp, Space, Switch, Typography, ColorPickerProps, Row, Col, InputNumber, Card } from "antd";
+import { ColorPicker, GetProp, Space, Switch, Typography, ColorPickerProps, Row, Col, InputNumber, Card, Divider, Tabs } from "antd";
 import { FC, useCallback, useEffect, useState } from "react";
 import { socket } from "./api";
 import { MessageType, Message, StoredAnimation, EventType } from "./types";
@@ -65,7 +65,7 @@ const Editor: FC = () => {
   return (
     <Card>
       <Row gutter={[16, 16]} align="middle">
-        <Col flex={ 0 }>
+        <Col span={ 12 }>
           <Player
             src={ {
               ...localAnimation.data,
@@ -82,49 +82,14 @@ const Editor: FC = () => {
             autoplay
           />
         </Col>
-        <Col flex={ 0 }>
-          <Space direction="vertical"> 
-            { localAnimation?.data.layers?.map((l, index) => (
-                <Space key={ `${index}${l.nm}${l.ind}` }>
-                  <div>Color {`rgb(${((l.shapes?.[0]?.it?.find(c => c.nm === 'Fill')?.c?.k?.[0] || 0) * 255).toFixed(0)}, ${((l.shapes?.[0]?.it?.find(c => c.nm === 'Fill')?.c?.k?.[1] || 0) * 255).toFixed(0)}, ${((l.shapes?.[0]?.it?.find(c => c.nm === 'Fill')?.c?.k?.[2] || 0) * 255).toFixed(0)})`}</div>
-                  <ColorPicker 
-                    value={ `rgb(${((l.shapes?.[0]?.it?.find(c => c.nm === 'Fill')?.c?.k?.[0] || 0) * 255).toFixed(0)}, ${((l.shapes?.[0]?.it?.find(c => c.nm === 'Fill')?.c?.k?.[1] || 0) * 255).toFixed(0)}, ${((l.shapes?.[0]?.it?.find(c => c.nm === 'Fill')?.c?.k?.[2] || 0) * 255).toFixed(0)})` as Color }
-                    format="rgb"
-                    disabled={ disabled }
-                    onOpenChange={ open => {
-                      if (open) {
-                        onFocus();
-                      } else {
-                        onBlur();
-                      }
-                    }}
-                    onChangeComplete={ (color) => {
-
-                      if (localAnimation) {
-                        setLocalAnimation({ 
-                          ...localAnimation, 
-                          data: {
-                            ...localAnimation?.data,
-                            layers: localAnimation?.data?.layers?.map(layer => ({
-                              ...layer, 
-                              shapes: layer.nm === l.nm ? layer.shapes?.map(shape => ({
-                                ...shape,
-                                it: shape.it?.map(i => ({
-                                  ...i,
-                                  c: i.nm === 'Fill' ? {
-                                    ...i.c,
-                                    k: [color.toRgb().r / 255, color.toRgb().g / 255, color.toRgb().b / 255]
-                                  } : i.c
-                                }))
-                              })) : layer.shapes
-                            })) 
-                          }
-                        });
-                      }
-                    } }
-                  />
-                  <Text>{ l.nm }</Text>
-                  <Switch 
+        <Col span={ 12 }>
+          <Tabs 
+            tabPosition="left"
+            items={ localAnimation?.data.layers?.map((l, layerIndex) => ({ 
+              label: `${l.nm}`, 
+              key: `${layerIndex}${l.nm}${l.shapes?.length}`,
+              icon: (
+                <Switch 
                     checkedChildren="Show" 
                     unCheckedChildren="Hide" 
                     value={ !l.hd }
@@ -153,9 +118,66 @@ const Editor: FC = () => {
                       }
                     } }
                   />
+              ),
+              children: (
+                <Space direction="vertical" style={ { width: '100%'}}>
+                  <Text>Shapes</Text>
+                  <Tabs 
+                    items={ l.shapes?.map((s, shapeIndex) => ({
+                      label: s?.nm,
+                      key: `${s?.nm}${shapeIndex}${s.it?.length}` as string,
+                      children: (
+                        <Space direction="vertical">
+                          { s.it?.filter(i => i.nm).map((it, itIndex) => (
+                            <div key={ `${it.nm}${itIndex}` }>
+                              <div>{it.nm}</div>
+                              <div>Color {`rgb(${((it?.c?.k?.[0] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[1] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[2] || 0) * 255).toFixed(0)})`}</div>
+                              <ColorPicker 
+                                value={ `rgb(${((it?.c?.k?.[0] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[1] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[2] || 0) * 255).toFixed(0)})` as Color }
+                                format="rgb"
+                                disabled={ disabled }
+                                onOpenChange={ open => {
+                                  if (open) {
+                                    onFocus();
+                                  } else {
+                                    onBlur();
+                                  }
+                                }}
+                                onChangeComplete={ (color) => {
+                                  if (localAnimation) {
+                                    setLocalAnimation({ 
+                                      ...localAnimation, 
+                                      data: {
+                                        ...localAnimation?.data,
+                                        layers: localAnimation?.data?.layers?.map((layer, lIndex) => ({
+                                          ...layer, 
+                                          shapes: lIndex === layerIndex ? layer.shapes?.map((shape, sIndex) => ({
+                                            ...shape,
+                                            it: sIndex === shapeIndex ? shape.it?.map((i, iIndex) => ({
+                                              ...i,
+                                              c: iIndex === itIndex ? {
+                                                ...i.c,
+                                                k: [color.toRgb().r / 255, color.toRgb().g / 255, color.toRgb().b / 255]
+                                              } : i.c
+                                            })) : shape.it
+                                          })) : layer.shapes
+                                        })) 
+                                      }
+                                    });
+                                  }
+                                } }
+                              />
+                              <Divider />
+                            </div>
+                          ) )}
+                        </Space>
+                      )
+                    })) }
+                  />
                 </Space>
-            )) }
-            </Space>
+              )
+            })) }
+          />
         </Col>
       </Row>
       <Row gutter={ [32,32]}>
