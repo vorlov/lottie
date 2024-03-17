@@ -45,7 +45,7 @@ export const getShapesTree = (
         title: (
           <Space>
             <Text>{ shape.nm }</Text>
-            { shape.c?.k &&
+            { shape.c?.k && shape.c.a === 0 &&
               <ColorPicker
                 value={ `rgb(${((shape.c?.k?.[0] || 0) * 255).toFixed(0)}, ${((shape.c?.k?.[1] || 0) * 255).toFixed(0)}, ${((shape.c?.k?.[2] || 0) * 255).toFixed(0)})` as Color }
                 format="rgb"
@@ -80,9 +80,10 @@ export const getShapesTree = (
         ) : undefined,
       };
 
-      if (!shape.c && !shape.it?.length) {
+      if ((!shape.c && !shape.it?.length)) {
         return;
       }
+
 
       data.push(item);
     }

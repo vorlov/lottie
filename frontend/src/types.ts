@@ -84,6 +84,7 @@ export type Shape = {
 };
 
 type ShapeColor = {
+  a?: 0 | 1; // Animated flag
   k: number[]; // Color keyframes
 }
 
