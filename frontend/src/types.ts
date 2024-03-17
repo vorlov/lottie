@@ -74,7 +74,7 @@ type Transform = {
   sa?: KeyframeValue<number>; // Skew Axis
 };
 
-type Shape = {
+export type Shape = {
   ty: string; // Type
   nm?: string; // Name
   gr?: GroupShape; // Group shape properties

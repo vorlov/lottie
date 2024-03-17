@@ -1,12 +1,12 @@
 import { useReactiveVar } from "@apollo/client";
 import { Player } from "@lottiefiles/react-lottie-player";
-import { ColorPicker, GetProp, Space, Switch, Typography, ColorPickerProps, Row, Col, InputNumber, Card, Divider, Tabs } from "antd";
+import { Space, Switch, Typography, Row, Col, InputNumber, Card, Tabs } from "antd";
+import Tree from "antd/es/tree/Tree";
 import { FC, useCallback, useEffect, useState } from "react";
 import { socket } from "./api";
+import { getShapesTree } from "./helpers";
 import { MessageType, Message, StoredAnimation, EventType } from "./types";
 import { myNameVar, selectedAnimationVar } from "./vars";
-
-type Color = GetProp<ColorPickerProps, 'value'>;
 
 const { Text } = Typography;
 
@@ -87,6 +87,7 @@ const Editor: FC = () => {
             tabPosition="left"
             items={ localAnimation?.data.layers?.map((l, layerIndex) => ({ 
               label: `${l.nm}`, 
+              disabled,
               key: `${layerIndex}${l.nm}${l.shapes?.length}`,
               icon: (
                 <Switch 
@@ -122,58 +123,19 @@ const Editor: FC = () => {
               children: (
                 <Space direction="vertical" style={ { width: '100%'}}>
                   <Text>Shapes</Text>
-                  <Tabs 
-                    // TODO Add Recursive Shapes Rendering?
-                    items={ l.shapes?.map((s, shapeIndex) => ({
-                      label: s?.nm,
-                      key: `${s?.nm}${shapeIndex}${s.it?.length}` as string,
-                      children: (
-                        <Space direction="vertical">
-                          { s.it?.filter(i => i.nm).map((it, itIndex) => (
-                            <div key={ `${it.nm}${itIndex}` }>
-                              <div>{it.nm}</div>
-                              <div>Color {`rgb(${((it?.c?.k?.[0] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[1] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[2] || 0) * 255).toFixed(0)})`}</div>
-                              <ColorPicker 
-                                value={ `rgb(${((it?.c?.k?.[0] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[1] || 0) * 255).toFixed(0)}, ${((it?.c?.k?.[2] || 0) * 255).toFixed(0)})` as Color }
-                                format="rgb"
-                                disabled={ disabled }
-                                onOpenChange={ open => {
-                                  if (open) {
-                                    onFocus();
-                                  } else {
-                                    onBlur();
-                                  }
-                                }}
-                                onChangeComplete={ (color) => {
-                                  if (localAnimation) {
-                                    setLocalAnimation({ 
-                                      ...localAnimation, 
-                                      data: {
-                                        ...localAnimation?.data,
-                                        layers: localAnimation?.data?.layers?.map((layer, lIndex) => ({
-                                          ...layer, 
-                                          shapes: lIndex === layerIndex ? layer.shapes?.map((shape, sIndex) => ({
-                                            ...shape,
-                                            it: sIndex === shapeIndex ? shape.it?.map((i, iIndex) => ({
-                                              ...i,
-                                              c: iIndex === itIndex ? {
-                                                ...i.c,
-                                                k: [color.toRgb().r / 255, color.toRgb().g / 255, color.toRgb().b / 255]
-                                              } : i.c
-                                            })) : shape.it
-                                          })) : layer.shapes
-                                        })) 
-                                      }
-                                    });
-                                  }
-                                } }
-                              />
-                              <Divider />
-                            </div>
-                          ) )}
-                        </Space>
-                      )
-                    })) }
+                  <Tree 
+                    treeData={ 
+                      getShapesTree(
+                        layerIndex,
+                        disabled,
+                        onFocus,
+                        onBlur,
+                        localAnimation,
+                        setLocalAnimation,
+                        l?.shapes
+                      ) 
+                    } 
+                    defaultExpandAll
                   />
                 </Space>
               )
@@ -222,6 +184,7 @@ const Editor: FC = () => {
             onFocus={ onFocus }
             onChange={ (value) => {
               if (localAnimation && value) {
+                // TODO Scale by scale prop of json or by width and height?
                 setLocalAnimation({ 
                   ...localAnimation, 
                   scale: value,
