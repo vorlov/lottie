@@ -123,6 +123,7 @@ const Editor: FC = () => {
                 <Space direction="vertical" style={ { width: '100%'}}>
                   <Text>Shapes</Text>
                   <Tabs 
+                    // TODO Add Recursive Shapes Rendering?
                     items={ l.shapes?.map((s, shapeIndex) => ({
                       label: s?.nm,
                       key: `${s?.nm}${shapeIndex}${s.it?.length}` as string,
