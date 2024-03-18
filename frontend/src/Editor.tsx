@@ -67,6 +67,7 @@ const Editor: FC = () => {
       <Row gutter={[16, 16]} align="middle">
         <Col span={ 12 }>
           <Player
+            // TODO Speed control by player ref?
             src={ {
               ...localAnimation.data,
               h: localAnimation.data.h / localAnimation.scale,
