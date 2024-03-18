@@ -16,10 +16,10 @@ function App() {
           <Col span={ 24 }>
           <FeaturedAnimations />
           </Col>
-          <Col span={ 12 }>
+          <Col span={ 18 }>
             <Editor />
           </Col>
-          <Col span={ 12 }>
+          <Col span={ 6 }>
             <Chat />
           </Col>
         </Row>

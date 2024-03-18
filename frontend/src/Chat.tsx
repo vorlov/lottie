@@ -31,9 +31,10 @@ const Chat: React.FC = () => {
             <div style={{ textAlign: 'start' }} key={index}>{ `${msg.name} - ${msg.message}` }</div>
           ))}
       </Col>
-      <Col span={ 12 }>
+      <Col span={ 24 }>
         <Form 
           form={ form }
+          layout="vertical"
           onFinish={ values => {
             const message: Message = {
               name: values.name,
